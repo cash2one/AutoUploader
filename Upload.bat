@@ -1,0 +1,1 @@
+python "AbsolutePathHere\AutoUpload.py" %* 
