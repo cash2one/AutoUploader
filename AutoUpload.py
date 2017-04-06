@@ -5,6 +5,8 @@ import tempfile
 import subprocess
 import json
 import pdb
+import logging
+import re
 
 #todo config file
 #todo cut first and last frame
@@ -22,8 +24,8 @@ def getFileType():
 		characterIndex = characterIndex - 1
 	return str((filename[characterIndex:]))
 	
-def getFilePrefix():
-	filename = os.listdir(framesDirectory + '\\')[0]
+def getFilePrefix(filename):
+	# filename = os.listdir(framesDirectory + '\\')[0]
 	characterIndex = 0
 	while True:
 		if filename[characterIndex] == '.':
@@ -31,7 +33,20 @@ def getFilePrefix():
 		characterIndex = characterIndex + 1
 	return str(filename[:characterIndex])
 
+#todo handle mismatch with only 2 files (could cause infinite loop)
+def getLastFrameName():
+	dirList = os.listdir(framesDirectory)
+	dirList.sort()
+	currentLastFileSearchIndex = 1
+	while True:
+		lastFrameName = dirList[len(dirList) - currentLastFileSearchIndex]
+		if getFilePrefix(lastFrameName) == getFilePrefix(os.listdir(framesDirectory + '\\')[0]): #if the prefixes of the first and last file match
+			return lastFrameName
+		currentLastFileSearchIndex = currentLastFileSearchIndex + 1
 
+def log(logMessage):
+	logging.debug(time.strftime("%H%M%S", time.localtime()) + ': ' + logMessage)
+	print(logMessage)
 
 # watch directory for frames
 
@@ -39,10 +54,20 @@ if len(sys.argv) < 2:
 	exit("No frame directory supplied. Drag frame folder onto program.")
 
 programDirectory = os.path.dirname(sys.argv[0])
-print ('program directory:' + programDirectory)
 framesDirectory = str(sys.argv[1])
 lastframeCount = 0
 currentFrameCount = 0
+
+# Setup log file for each session
+logging.basicConfig(filename=programDirectory + '\log-' + time.strftime("%H%M%S%d%m%y", time.localtime()) + '.log',level=logging.DEBUG)
+
+log('Frame directory: ' + framesDirectory)
+
+#read config file
+with open(programDirectory + '\Config.json') as data_file:
+ 	data = json.load(data_file)
+
+#todo handle missing config file
 
 while True:
 	lastframeCount = currentFrameCount
@@ -53,35 +78,48 @@ while True:
 
 	print('Last frame count: ' + str(lastframeCount))
 	print('Current frame count: ' + str(currentFrameCount))
-	time.sleep(1)
+	sleepInterval = float(data['Properties']['FrameDirectoryWatchInterval'])
+	time.sleep(sleepInterval)
+
+log('Found ' + str(currentFrameCount) + ' frames in directory. Starting sequence creation...')
+# delete last frame
+lastFrameName = getLastFrameName()
+print(framesDirectory +'\\'+ lastFrameName)
+print(framesDirectory + r'\\_' + lastFrameName)
+os.rename(framesDirectory +'\\'+ lastFrameName, framesDirectory + r'\\_' + lastFrameName)
 
 
 # when frames are no longer being created, convert
 
-#read config file
-pdb.set_trace()
-with open(programDirectory + '\Config.json') as data_file:
- 	data = json.load(data_file)
 
-videoFramerate = '-r ' + data['Properties']['Framerate'] + ' '
-print ('framerate: ' + videoFramerate)
-
-#todo specifiy framerate
 fullBatchPath = programDirectory + '\\' + 'ffmpeg.exe '
-parameter1 = '-f image2 '
-inputFile = '-i ' + '"' + framesDirectory + '\\' + getFilePrefix() + r'.%%04d' + getFileType() + '" '
+videoFramerate = '-r ' + data['Properties']['Framerate'] + ' '
+parameter1 = '-f image2 -start_number 2 '
+inputFile = '-i ' + '"' + framesDirectory + '\\' + getFilePrefix(os.listdir(framesDirectory + '\\')[0]) + r'.%%04d' + getFileType() + '" '
 
-outputFile = 'C:\Users\Cameron\AppData\Local\Temp\out.mp4'
+outputFileDir = tempfile.gettempdir()+ '\\'
+outputFileName = 'render-'+ time.strftime("%H%M%S%d%m%y", time.localtime()) +'.mp4'
+outputFile = outputFileDir + outputFileName
 
 # Create temporary batch file to call ffmpeg
 tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
-tempBatFile.write(fullBatchPath + parameter1 + inputFile + outputFile)
+tempBatFile.write(fullBatchPath + videoFramerate + parameter1 + inputFile + outputFile)
 tempBatFile.close()
+
+log('Batch arguments: ' + fullBatchPath + videoFramerate + parameter1 + inputFile + outputFile)
+log('Batch file created. Attempting to call.')
+
 print(tempBatFile.name)
 
 subprocess.call(tempBatFile.name)
 
+log('Video creation completed')
+
+#remove temp batch file
 os.remove(tempBatFile.name)
+
+# move video out of temp directory into the directory of the script
+os.rename(outputFile, programDirectory + '\\' + outputFileName)
 
 # upload to youtube
 

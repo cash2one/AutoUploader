@@ -1,8 +1,9 @@
 {
     "Properties": {
-        "Framerate": "50",
+        "Framerate"	: "50",
         "OutputWidth" : "1920",
         "OutputHeight" : "1080",
-		"Bitrate": "8000"
+		"Bitrate": "8000",
+		"FrameDirectoryWatchInterval" : "10"
     }
 }
