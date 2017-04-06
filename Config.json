@@ -4,6 +4,7 @@
         "OutputWidth" : "1920",
         "OutputHeight" : "1080",
 		"Bitrate": "8000",
-		"FrameDirectoryWatchInterval" : "10"
+		"FrameDirectoryWatchInterval" : "10",
+		"MinimumFrameCount" : "5"
     }
 }
