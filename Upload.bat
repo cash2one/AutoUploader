@@ -1,1 +1,1 @@
-python "AbsolutePathHere\AutoUpload.py" %* 
+python27\python.exe %~dp0AutoUpload.py %* 
