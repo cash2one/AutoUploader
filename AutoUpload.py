@@ -3,6 +3,7 @@ import os
 import time
 import tempfile
 import subprocess
+import json
 import pdb
 
 #todo config file
@@ -30,6 +31,8 @@ def getFilePrefix():
 		characterIndex = characterIndex + 1
 	return str(filename[:characterIndex])
 
+
+
 # watch directory for frames
 
 if len(sys.argv) < 2:
@@ -55,10 +58,17 @@ while True:
 
 # when frames are no longer being created, convert
 
+#read config file
+pdb.set_trace()
+with open(programDirectory + '\Config.json') as data_file:
+ 	data = json.load(data_file)
+
+videoFramerate = '-r ' + data['Properties']['Framerate'] + ' '
+print ('framerate: ' + videoFramerate)
+
 #todo specifiy framerate
 fullBatchPath = programDirectory + '\\' + 'ffmpeg.exe '
 parameter1 = '-f image2 '
-# pdb.set_trace()
 inputFile = '-i ' + '"' + framesDirectory + '\\' + getFilePrefix() + r'.%%04d' + getFileType() + '" '
 
 outputFile = 'C:\Users\Cameron\AppData\Local\Temp\out.mp4'
