@@ -36,6 +36,7 @@ if len(sys.argv) < 2:
 	exit("No frame directory supplied. Drag frame folder onto program.")
 
 programDirectory = os.path.dirname(sys.argv[0])
+print ('program directory:' + programDirectory)
 framesDirectory = str(sys.argv[1])
 lastframeCount = 0
 currentFrameCount = 0
@@ -54,6 +55,7 @@ while True:
 
 # when frames are no longer being created, convert
 
+#todo specifiy framerate
 fullBatchPath = programDirectory + '\\' + 'ffmpeg.exe '
 parameter1 = '-f image2 '
 # pdb.set_trace()
