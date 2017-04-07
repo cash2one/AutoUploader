@@ -8,6 +8,8 @@ import pdb
 import logging
 import re
 
+#upload python 3 to git
+#account for spaces in input names
 #todo cut first and last frame
 #todo account for frames not starting at 0
 
