@@ -86,7 +86,6 @@ while True:
 	sleepInterval = float(data['Properties']['FrameDirectoryWatchInterval'])
 	time.sleep(sleepInterval)
 
-
 if currentFrameCount < float(data['Properties']['MinimumFrameCount']):
 	log('Error: Supplied frame directory has fewer than MinimumFrameCount files after waiting for the FrameDirectoryWatchInterval in config.json. Either select the correct directory or increase FrameDirectoryWatchInterval time')
 	shutdown()
@@ -114,7 +113,7 @@ outputFile = outputFileDir + outputFileName
 
 # Create temporary batch file to call ffmpeg
 tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
-tempBatFile.write(fullBatchPath + videoFramerate + parameter1 + inputFile + outputFile)
+tempBatFile.write(bytes(fullBatchPath + videoFramerate + parameter1 + inputFile + outputFile, 'UTF-8'))
 tempBatFile.close()
 
 log('Batch arguments: ' + fullBatchPath + videoFramerate + parameter1 + inputFile + outputFile)
