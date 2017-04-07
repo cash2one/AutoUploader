@@ -1,1 +1,1 @@
-%~dp0python27\python.exe %~dp0AutoUpload.py %* 
+"%~dp0Python34\python.exe" "%~dp0AutoUpload.py" %*
