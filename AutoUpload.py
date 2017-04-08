@@ -6,49 +6,99 @@ import subprocess
 import json
 import pdb
 import logging
-import re
-import file_ops
+import shutil
 
 #todo cut first and last frame
 #todo account for frames not starting at 0
 
 class FFmpegObject:
-	mFullBatchPath = ''
-	mVideoFramerate = ''
-	mParameter1 = ''
-	mInputFile = ''
-	mOutputFileDir = ''
-	mOutputFileName = ''
-	mOutputFile = ''
+	fullBatchPath = ''
+	videoFramerate = ''
+	parameter1 = ''
+	inputFile = ''
+	outputFileDir = ''
+	outputFileName = ''
+	outputFile = ''
 
+	def createBatchFile(self):
+		# Create temporary batch file to call ffmpeg
+		tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
+		tempBatFile.write(bytes(self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputFile, 'UTF-8'))
+		tempBatFile.close()
+
+		log('Batch arguments: ' + self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputFile)
+		log('Batch file created.')
+
+		print(tempBatFile.name)
+
+		subprocess.call(tempBatFile.name)
+
+		log('Batch program returned')
+
+		#remove temp batch file
+		os.remove(tempBatFile.name)
+
+#copy all frames to a temp location
+#determine the filetype of the frames
+#remove any files that aren't of that type
+#sort the frames into alphabetical order
+#top and tail the frames
+#rename the frames into an ordered sequence
+class FramePrep:
+	
+	framesDirectory = ''
+	def __init__(self, frameDir):
+		self.framesDirectory = frameDir
+		self.copyTempFrames()
+		self.determineFrameFiletype()
+		self.removeNonFrameObjects()
+		self.getSortedFrameList()
+		self.topAndTail()
+		self.renameFramesToSortedList()
+		shutdown()
+
+	#copy only image files to temp directory
+	def copyTempFrames(self):
+		suffixes = ('.png', '.jpg', '.jpeg', '.tga', '.tiff')
+		if not os.path.isdir(framesDirectory + "\\temp\\"):
+			os.mkdir(framesDirectory + "\\temp\\")
+		for file in os.listdir(self.framesDirectory):
+			if file.endswith(suffixes):
+				shutil.copy(self.framesDirectory + '\\' + file, self.framesDirectory + "\\temp\\" + file)
+			else:
+				print('File ' + file + ' was not copied')
+		return
+
+	def determineFrameFiletype(self):
+		return
+
+	def removeNonFrameObjects(self):
+		return
+
+	def getSortedFrameList(self):
+		return
+
+	def topAndTail(self):
+		return
+
+	def renameFramesToSortedList(self):
+		return
+
+def prepareFrames(framesDirectory):
+	framePrepObject = FramePrep(framesDirectory)
 
 def convertFramesToVideo(ffmpegCall):
-	fullBatchPath = programDirectory + '\\' + 'ffmpeg.exe '
-	ffmpegCall.mFullBatchPath = fullBatchPath
-	videoFramerate = '-r ' + data['Properties']['Framerate'] + ' '
-	parameter1 = '-f image2 -start_number 2 '
-	inputFile = '-i ' + '"' + framesDirectory + '\\' + getFilePrefix(os.listdir(framesDirectory + '\\')[0]) + r'.%%04d' + getFileType() + '" '
+	ffmpegCall.fullBatchPath = programDirectory + '\\' + 'ffmpeg.exe '
+	ffmpegCall.videoFramerate = '-r ' + data['Properties']['Framerate'] + ' '
+	ffmpegCall.parameter1 = '-f image2 -start_number 2 '
+	ffmpegCall.inputFile = '-i ' + '"' + framesDirectory + '\\' + getFilePrefix(os.listdir(framesDirectory + '\\')[0]) + r'.%%04d' + getFileType() + '" '
 
-	outputFileDir = tempfile.gettempdir()+ '\\'
-	outputFileName = 'render-'+ time.strftime("%H%M%S%d%m%y", time.localtime()) +'.mp4'
-	outputFile = outputFileDir + outputFileName
+	ffmpegCall.outputFileDir = tempfile.gettempdir()+ '\\'
+	ffmpegCall.outputFileName = 'render-'+ time.strftime("%H%M%S%d%m%y", time.localtime()) +'.mp4'
+	ffmpegCall.outputFile = ffmpegCall.outputFileDir + ffmpegCall.outputFileName
 
-	# Create temporary batch file to call ffmpeg
-	tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
-	tempBatFile.write(bytes(fullBatchPath + videoFramerate + parameter1 + inputFile + outputFile, 'UTF-8'))
-	tempBatFile.close()
+	ffmpegCall.createBatchFile()
 
-	log('Batch arguments: ' + fullBatchPath + videoFramerate + parameter1 + inputFile + outputFile)
-	log('Batch file created.')
-
-	print(tempBatFile.name)
-
-	subprocess.call(tempBatFile.name)
-
-	log('Batch program returned')
-
-	#remove temp batch file
-	os.remove(tempBatFile.name)
 	return ffmpegCall
 
 def getFrameCount(_frameDir):
@@ -134,6 +184,7 @@ if currentFrameCount < float(data['Properties']['MinimumFrameCount']):
 log('Found ' + str(currentFrameCount) + ' frames in directory. Starting sequence creation...')
 
 # delete last frame
+prepareFrames(framesDirectory)
 lastFrameName = getLastFrameName()
 print(framesDirectory +'\\'+ lastFrameName)
 print(framesDirectory + r'\\_' + lastFrameName)
@@ -145,12 +196,10 @@ os.rename(framesDirectory +'\\'+ lastFrameName, framesDirectory + r'\\_' + lastF
 
 ffmpegCall = FFmpegObject()
 convertFramesToVideo(ffmpegCall)
-print(ffmpegCall.mFullBatchPath)
-ffmpegCall.m
 
 # move video out of temp directory into the directory of the script
-os.rename(outputFile, programDirectory + '\\' + outputFileName)
-log('Output video moved to ' + programDirectory + '\\' + outputFileName)
+shutil.move(ffmpegCall.outputFile, programDirectory + '\\' + ffmpegCall.outputFileName)
+log('Output video moved to ' + programDirectory + '\\' + ffmpegCall.outputFileName)
 
 # upload to youtube
 
