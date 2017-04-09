@@ -8,8 +8,7 @@ import pdb
 import logging
 import shutil
 
-#todo cut first and last frame
-#todo account for frames not starting at 0
+#todo clean up temporary files when we're done
 
 class FFmpegObject:
 	fullBatchPath = ''
@@ -60,14 +59,19 @@ class FramePrep:
 		self.getSortedFrameList()
 		self.topAndTail()
 		self.renameFramesToSortedList()
-		shutdown()
+		
 
 	#copy only image files to temp directory
 	def copyTempFrames(self):
 		suffixes = ('.png', '.jpg', '.jpeg', '.tga', '.tiff')
+		self.tempFramesDirectory = self.framesDirectory + "\\temp\\"
+		#make temp directory if it doesn't already exist. If it does, clear the directory before we copy anything to it
 		if not os.path.isdir(framesDirectory + "\\temp\\"):
 			os.mkdir(framesDirectory + "\\temp\\")
-		self.tempFramesDirectory = self.framesDirectory + "\\temp\\"
+		else:
+			for existingFile in os.listdir(self.tempFramesDirectory):
+				os.remove(self.tempFramesDirectory + '\\' + existingFile)
+
 		for file in os.listdir(self.framesDirectory):
 			if file.endswith(suffixes):
 				shutil.copy(self.framesDirectory + '\\' + file, self.tempFramesDirectory + file)
@@ -116,24 +120,48 @@ class FramePrep:
 		topAmount = data['Properties']['NumStartingFramesToSkip']
 		tailAmount = data['Properties']['NumEndingFramesToSkip']
 		currentTrimAmount = 0
+		currentCheckIndex = 0
 		while True:
-			if currentTrimAmount == topAmount:
+			if currentTrimAmount == int(topAmount):
 				break
-			print(os.listdir()[0])
-			#os.remove(os.listdir()[0])
-			currentTrimAmount = currentTrimAmount + 1
+			currentFile = os.listdir(self.tempFramesDirectory)[currentCheckIndex]
+			if currentFile.startswith(self.filePrefix):
+				os.remove(self.tempFramesDirectory + "\\" + currentFile)
+				currentTrimAmount = currentTrimAmount + 1
+			else:
+				currentCheckIndex = currentCheckIndex + 1
+		
+
+		currentTrimAmount = 0
+		currentCheckIndex = 0
+		while True:
+			if currentTrimAmount == int(tailAmount):
+				break
+			lastIndex = len(os.listdir(self.tempFramesDirectory)) - 1
+			currentFile = (os.listdir(self.tempFramesDirectory)[lastIndex - currentCheckIndex])
+			if currentFile.startswith(self.filePrefix):
+				os.remove(self.tempFramesDirectory + "\\" + currentFile)
+				currentTrimAmount = currentTrimAmount + 1
+			else:
+				currentCheckIndex = currentCheckIndex + 1
 		return
 
 	def renameFramesToSortedList(self):
+		count = 0
+		for file in os.listdir(self.tempFramesDirectory):
+			if file.startswith(self.filePrefix): 
+				os.rename(self.tempFramesDirectory + '\\' + file, self.tempFramesDirectory + '\\' + self.filePrefix + str(count).zfill(self.fileNumberinglength) + self.fileSuffix)
+				count += 1
+
 		return
 
-def prepareFrames(framesDirectory):
-	framePrepObject = FramePrep(framesDirectory)
+	
 
 def convertFramesToVideo(ffmpegCall):
+	framesDirectory = framePrepObject.tempFramesDirectory
 	ffmpegCall.fullBatchPath = programDirectory + '\\' + 'ffmpeg.exe '
 	ffmpegCall.videoFramerate = '-r ' + data['Properties']['Framerate'] + ' '
-	ffmpegCall.parameter1 = '-f image2 -start_number 2 '
+	ffmpegCall.parameter1 = '-f image2 '
 	ffmpegCall.inputFile = '-i ' + '"' + framesDirectory + '\\' + getFilePrefix(os.listdir(framesDirectory + '\\')[0]) + r'.%%04d' + getFileType() + '" '
 
 	ffmpegCall.outputFileDir = tempfile.gettempdir()+ '\\'
@@ -190,6 +218,25 @@ def watchDirectoryForFrames(_currentFrameCount):
 		time.sleep(sleepInterval)
 	return _currentFrameCount
 
+def uploadToYoutube():
+	fullBatchPath = programDirectory + '\\Python34\\python.exe ' + programDirectory + '\\upload_video.py --file '
+	videoPath = '"' + programDirectory + '\\' + ffmpegCall.outputFileName + '"'
+	tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
+	tempBatFile.write(bytes(fullBatchPath + videoPath, 'UTF-8'))
+	tempBatFile.close()
+
+	log('Batch file created.')
+
+	print(tempBatFile.name)
+
+	subprocess.call(tempBatFile.name)
+
+	log('Batch program returned')
+
+	#remove temp batch file
+	os.remove(tempBatFile.name)
+
+
 def log(logMessage):
 	logging.debug(time.strftime("%H%M%S", time.localtime()) + ': ' + logMessage)
 	print(logMessage)
@@ -227,11 +274,12 @@ if currentFrameCount < float(data['Properties']['MinimumFrameCount']):
 log('Found ' + str(currentFrameCount) + ' frames in directory. Starting sequence creation...')
 
 # delete last frame
-prepareFrames(framesDirectory)
-lastFrameName = getLastFrameName()
-print(framesDirectory +'\\'+ lastFrameName)
-print(framesDirectory + r'\\_' + lastFrameName)
-os.rename(framesDirectory +'\\'+ lastFrameName, framesDirectory + r'\\_' + lastFrameName)
+framePrepObject = FramePrep(framesDirectory)
+
+# lastFrameName = getLastFrameName()
+# print(framesDirectory +'\\'+ lastFrameName)
+# print(framesDirectory + r'\\_' + lastFrameName)
+# os.rename(framesDirectory +'\\'+ lastFrameName, framesDirectory + r'\\_' + lastFrameName)
 
 
 # when frames are no longer being created, convert
@@ -245,5 +293,6 @@ shutil.move(ffmpegCall.outputFile, programDirectory + '\\' + ffmpegCall.outputFi
 log('Output video moved to ' + programDirectory + '\\' + ffmpegCall.outputFileName)
 
 # upload to youtube
+uploadToYoutube()
 
 # send email notification
