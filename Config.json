@@ -7,6 +7,6 @@
 		"FrameDirectoryWatchInterval" : "1",
 		"MinimumFrameCount" : "5",
 		"NumStartingFramesToSkip" : "2",
-		"NumEndingFramesToSkip" : 2
+		"NumEndingFramesToSkip" : "2"
     }
 }
