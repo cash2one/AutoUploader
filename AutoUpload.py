@@ -47,10 +47,15 @@ class FFmpegObject:
 class FramePrep:
 	
 	framesDirectory = ''
+	tempFramesDirectory = ''
+	filePrefix = ''
+	fileNumberinglength = ''
+	fileSuffix = ''
+
 	def __init__(self, frameDir):
 		self.framesDirectory = frameDir
 		self.copyTempFrames()
-		self.determineFrameFiletype()
+		self.determineFrameAttributes()
 		self.removeNonFrameObjects()
 		self.getSortedFrameList()
 		self.topAndTail()
@@ -62,14 +67,43 @@ class FramePrep:
 		suffixes = ('.png', '.jpg', '.jpeg', '.tga', '.tiff')
 		if not os.path.isdir(framesDirectory + "\\temp\\"):
 			os.mkdir(framesDirectory + "\\temp\\")
+		self.tempFramesDirectory = self.framesDirectory + "\\temp\\"
 		for file in os.listdir(self.framesDirectory):
 			if file.endswith(suffixes):
-				shutil.copy(self.framesDirectory + '\\' + file, self.framesDirectory + "\\temp\\" + file)
+				shutil.copy(self.framesDirectory + '\\' + file, self.tempFramesDirectory + file)
 			else:
 				print('File ' + file + ' was not copied')
 		return
 
-	def determineFrameFiletype(self):
+	def determineFrameAttributes(self):
+		tempFilename = os.listdir(self.tempFramesDirectory)[0]
+		print (os.listdir(self.tempFramesDirectory)[0]) 
+
+		#get the file extension
+		characterIndex = len(tempFilename) - 1
+		while True:
+			if tempFilename[characterIndex] == '.':
+				break
+			characterIndex = characterIndex - 1
+		self.fileSuffix = str((tempFilename[characterIndex:]))
+
+		tempFilename = str((tempFilename[:characterIndex]))
+		print(tempFilename)
+
+		#find how many sequence numbers exist
+		characterIndex = len(tempFilename) - 1
+		numeralDigits = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+		while True:
+			if not tempFilename[characterIndex] in numeralDigits:
+				break
+			characterIndex = characterIndex - 1
+		self.fileNumberinglength = (len(tempFilename) - 1) - characterIndex
+
+		self.filePrefix = str((tempFilename[:characterIndex + 1]))
+		print('numbering length: ' + str(self.fileNumberinglength))
+		print(tempFilename)		
+
+		#FirstPersonExampleMap.0001.jpg
 		return
 
 	def removeNonFrameObjects(self):
@@ -79,6 +113,15 @@ class FramePrep:
 		return
 
 	def topAndTail(self):
+		topAmount = data['Properties']['NumStartingFramesToSkip']
+		tailAmount = data['Properties']['NumEndingFramesToSkip']
+		currentTrimAmount = 0
+		while True:
+			if currentTrimAmount == topAmount:
+				break
+			print(os.listdir()[0])
+			#os.remove(os.listdir()[0])
+			currentTrimAmount = currentTrimAmount + 1
 		return
 
 	def renameFramesToSortedList(self):
