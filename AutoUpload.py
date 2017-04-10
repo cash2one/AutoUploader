@@ -8,6 +8,8 @@ import pdb
 import logging
 import shutil
 
+#prompt for file name at program start
+#move output file to frames directory
 #todo clean up temporary files when we're done
 
 class FFmpegObject:
@@ -15,6 +17,7 @@ class FFmpegObject:
 	videoFramerate = ''
 	parameter1 = ''
 	inputFile = ''
+	outputResolution = ''
 	outputFileDir = ''
 	outputFileName = ''
 	outputFile = ''
@@ -22,10 +25,10 @@ class FFmpegObject:
 	def createBatchFile(self):
 		# Create temporary batch file to call ffmpeg
 		tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
-		tempBatFile.write(bytes(self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputFile, 'UTF-8'))
+		tempBatFile.write(bytes(self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputResolution + self.outputFile, 'UTF-8'))
 		tempBatFile.close()
 
-		log('Batch arguments: ' + self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputFile)
+		log('Batch arguments: ' + self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputResolution + self.outputFile)
 		log('Batch file created.')
 
 		print(tempBatFile.name)
@@ -163,7 +166,7 @@ def convertFramesToVideo(ffmpegCall):
 	ffmpegCall.videoFramerate = '-r ' + data['Properties']['Framerate'] + ' '
 	ffmpegCall.parameter1 = '-f image2 '
 	ffmpegCall.inputFile = '-i ' + '"' + framesDirectory + '\\' + getFilePrefix(os.listdir(framesDirectory + '\\')[0]) + r'.%%04d' + getFileType() + '" '
-
+	ffmpegCall.outputResolution = '-s ' + data['Properties']['OutputWidth'] + 'x' + data['Properties']['OutputHeight'] + ' '
 	ffmpegCall.outputFileDir = tempfile.gettempdir()+ '\\'
 	ffmpegCall.outputFileName = 'render-'+ time.strftime("%H%M%S%d%m%y", time.localtime()) +'.mp4'
 	ffmpegCall.outputFile = ffmpegCall.outputFileDir + ffmpegCall.outputFileName
@@ -220,9 +223,10 @@ def watchDirectoryForFrames(_currentFrameCount):
 
 def uploadToYoutube():
 	fullBatchPath = programDirectory + '\\Python34\\python.exe ' + programDirectory + '\\upload_video.py --file '
-	videoPath = '"' + programDirectory + '\\' + ffmpegCall.outputFileName + '"'
+	videoPath = '"' + programDirectory + '\\' + ffmpegCall.outputFileName + '" '
+	videoTitleParam = ' --title "' + videoTitle + '"'
 	tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
-	tempBatFile.write(bytes(fullBatchPath + videoPath, 'UTF-8'))
+	tempBatFile.write(bytes(fullBatchPath + videoPath + videoTitleParam, 'UTF-8'))
 	tempBatFile.close()
 
 	log('Batch file created.')
@@ -245,6 +249,8 @@ def shutdown():
 	exit('Program ended. Press any key to close window.')
 
 # watch directory for frames
+
+videoTitle = input('Enter youtube video title: ')
 
 if len(sys.argv) < 2:
 	log('No frame directory supplied. Drag frame folder onto program.')

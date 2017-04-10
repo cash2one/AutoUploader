@@ -167,7 +167,7 @@ if __name__ == '__main__':
   argparser.add_argument("--keywords", help="Video keywords, comma separated",
     default="")
   argparser.add_argument("--privacyStatus", choices=VALID_PRIVACY_STATUSES,
-    default=VALID_PRIVACY_STATUSES[0], help="Video privacy status.")
+    default=VALID_PRIVACY_STATUSES[2], help="Video privacy status.")
   args = argparser.parse_args()
 
   if not os.path.exists(args.file):
