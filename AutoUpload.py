@@ -8,7 +8,6 @@ import pdb
 import logging
 import shutil
 
-#prompt for file name at program start
 #move output file to frames directory
 #todo clean up temporary files when we're done
 #todo carriage return frame status
@@ -16,6 +15,7 @@ import shutil
 #todo avoid upscaling video if supplied resolution is smaller than the resolution in the config
 #todo copy frames as they being made
 #todo email after the video is uploaded
+#todo move log to output folder
 
 class FFmpegObject:
 	fullBatchPath = ''
@@ -173,7 +173,7 @@ def convertFramesToVideo(ffmpegCall):
 	ffmpegCall.inputFile = '-i ' + '"' + framesDirectory + '\\' + getFilePrefix(os.listdir(framesDirectory + '\\')[0]) + r'.%%04d' + getFileType() + '" '
 	ffmpegCall.outputResolution = '-s ' + data['Properties']['OutputWidth'] + 'x' + data['Properties']['OutputHeight'] + ' '
 	ffmpegCall.outputFileDir = tempfile.gettempdir()+ '\\'
-	ffmpegCall.outputFileName = 'render-'+ time.strftime("%H%M%S%d%m%y", time.localtime()) +'.mp4'
+	ffmpegCall.outputFileName = videoTitle +'.mp4'
 	ffmpegCall.outputFile = ffmpegCall.outputFileDir + ffmpegCall.outputFileName
 
 	ffmpegCall.createBatchFile()
@@ -253,8 +253,6 @@ def log(logMessage):
 def shutdown():
 	exit('Program ended. Press any key to close window.')
 
-# watch directory for frames
-
 videoTitle = input('Enter youtube video title: ')
 
 if len(sys.argv) < 2:
@@ -270,10 +268,12 @@ logging.basicConfig(filename=programDirectory + '\log-' + time.strftime("%H%M%S%
 log('Frame directory: ' + framesDirectory)
 
 #read config file
+#todo handle missing config file
 with open(programDirectory + '\Config.json') as data_file:
  	data = json.load(data_file)
 
-#todo handle missing config file
+
+# watch directory for frames
 currentFrameCount = 0
 currentFrameCount = watchDirectoryForFrames(currentFrameCount)
 
@@ -284,18 +284,10 @@ if currentFrameCount < float(data['Properties']['MinimumFrameCount']):
 
 log('Found ' + str(currentFrameCount) + ' frames in directory. Starting sequence creation...')
 
-# delete last frame
+# top and tail frames and rename them into an ordered sequence
 framePrepObject = FramePrep(framesDirectory)
 
-# lastFrameName = getLastFrameName()
-# print(framesDirectory +'\\'+ lastFrameName)
-# print(framesDirectory + r'\\_' + lastFrameName)
-# os.rename(framesDirectory +'\\'+ lastFrameName, framesDirectory + r'\\_' + lastFrameName)
-
-
 # when frames are no longer being created, convert
-#todo set output resolution from config
-
 ffmpegCall = FFmpegObject()
 convertFramesToVideo(ffmpegCall)
 
@@ -303,7 +295,10 @@ convertFramesToVideo(ffmpegCall)
 shutil.move(ffmpegCall.outputFile, programDirectory + '\\' + ffmpegCall.outputFileName)
 log('Output video moved to ' + programDirectory + '\\' + ffmpegCall.outputFileName)
 
-# upload to youtube
-uploadToYoutube()
+if '-upload' in sys.argv:
+	uploadToYoutube()
+else:
+	print("No -upload parameter passed. Skipping upload")
+
 
 # send email notification
