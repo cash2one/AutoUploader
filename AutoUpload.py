@@ -11,6 +11,11 @@ import shutil
 #prompt for file name at program start
 #move output file to frames directory
 #todo clean up temporary files when we're done
+#todo carriage return frame status
+#todo watch frame location indefinitely if the supplied location is empty
+#todo avoid upscaling video if supplied resolution is smaller than the resolution in the config
+#todo copy frames as they being made
+#todo email after the video is uploaded
 
 class FFmpegObject:
 	fullBatchPath = ''
