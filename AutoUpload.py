@@ -8,8 +8,6 @@ import pdb
 import logging
 import shutil
 
-#move output file to frames directory
-#todo clean up temporary files when we're done
 #todo carriage return frame status
 #todo watch frame location indefinitely if the supplied location is empty
 #todo avoid upscaling video if supplied resolution is smaller than the resolution in the config
@@ -169,6 +167,9 @@ class FramePrep:
 
 		return
 
+	def removeTempFrames(self):
+		shutil.rmtree(self.tempFramesDirectory)
+
 	
 
 def convertFramesToVideo(ffmpegCall):
@@ -183,6 +184,8 @@ def convertFramesToVideo(ffmpegCall):
 	ffmpegCall.outputFile = ffmpegCall.outputFileDir + ffmpegCall.outputFileName
 
 	ffmpegCall.createBatchFile()
+
+
 
 	return ffmpegCall
 
@@ -309,6 +312,8 @@ framePrepObject = FramePrep(framesDirectory)
 # when frames are no longer being created, convert
 ffmpegCall = FFmpegObject()
 convertFramesToVideo(ffmpegCall)
+
+framePrepObject.removeTempFrames()
 
 # move video out of temp directory into the directory of the script
 shutil.move(ffmpegCall.outputFile, framesDirectory + '\\' + ffmpegCall.outputFileName)
