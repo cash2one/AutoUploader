@@ -17,6 +17,12 @@ import shutil
 #todo email after the video is uploaded
 #todo move log to output folder
 
+"""
+normal process
+normal process without upload
+quick convert existing video
+"""
+
 class FFmpegObject:
 	fullBatchPath = ''
 	videoFramerate = ''
@@ -184,13 +190,20 @@ def getFrameCount(_frameDir):
 	return len(os.listdir(_frameDir))
 
 def getFileType():
-	filename = os.listdir(framesDirectory + '\\')[0]
-	characterIndex = len(filename) - 1
+	suffixes = ('.png', '.jpg', '.jpeg', '.tga', '.tiff')
+	currentIndex = 0
 	while True:
-		if filename[characterIndex] == '.':
-			break
-		characterIndex = characterIndex - 1
-	return str((filename[characterIndex:]))
+		filename = os.listdir(framesDirectory + '\\')[currentIndex]
+		characterIndex = len(filename) - 1
+		while True:
+			if filename[characterIndex] == '.':
+				break
+			characterIndex = characterIndex - 1
+			fileExtension = str((filename[characterIndex:]))
+			if fileExtension in suffixes:
+				return str((filename[characterIndex:]))
+			else:
+				currentIndex += 1
 	
 def getFilePrefix(filename):
 	# filename = os.listdir(framesDirectory + '\\')[0]
@@ -253,7 +266,13 @@ def log(logMessage):
 def shutdown():
 	exit('Program ended. Press any key to close window.')
 
-videoTitle = input('Enter youtube video title: ')
+
+
+
+
+
+
+videoTitle = input('Enter video title: ')
 
 if len(sys.argv) < 2:
 	log('No frame directory supplied. Drag frame folder onto program.')
@@ -292,8 +311,8 @@ ffmpegCall = FFmpegObject()
 convertFramesToVideo(ffmpegCall)
 
 # move video out of temp directory into the directory of the script
-shutil.move(ffmpegCall.outputFile, programDirectory + '\\' + ffmpegCall.outputFileName)
-log('Output video moved to ' + programDirectory + '\\' + ffmpegCall.outputFileName)
+shutil.move(ffmpegCall.outputFile, framesDirectory + '\\' + ffmpegCall.outputFileName)
+log('Output video moved to ' + framesDirectory + '\\' + ffmpegCall.outputFileName)
 
 if '-upload' in sys.argv:
 	uploadToYoutube()
