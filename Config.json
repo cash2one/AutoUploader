@@ -3,17 +3,17 @@
         "Framerate"	: "50",
         "OutputWidth" : "1920",
         "OutputHeight" : "1080",
-		"Bitrate": "8000",
-		"FrameDirectoryWatchInterval" : "10",
-		"MinimumFrameCount" : "5",
-		"NumStartingFramesToSkip" : "2",
-		"NumEndingFramesToSkip" : "2"
+	"Bitrate": "8000",
+	"FrameDirectoryWatchInterval" : "10",
+	"MinimumFrameCount" : "5",
+	"NumStartingFramesToSkip" : "2",
+	"NumEndingFramesToSkip" : "2"
     },
 
     "Handbrake": {
         "Framerate"	: "50",
         "OutputWidth" : "1920",
         "OutputHeight" : "1080",
-		"Bitrate": "8000",
+	"Bitrate": "8000"
     }
 }
