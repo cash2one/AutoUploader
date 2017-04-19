@@ -170,17 +170,43 @@ class FramePrep:
 	def removeTempFrames(self):
 		shutil.rmtree(self.tempFramesDirectory)
 
-	
+#
+class Args:
+
+	args = ''
+	programDirectory = ''
+
+	argUpload = False
+
+	def __init__(self):
+		args = sys.argv
+		if len(sys.argv) < 2:
+			log('No frame directory supplied. Drag frame folder or movie file onto program.')
+			shutdown()
+
+		self.findArguments()
+
+	def findArguments(self):
+		self.programDirectory = os.path.dirname(sys.argv[0])
+
+		if '-upload' in self.args:
+			self.argUpload = True
+
+class JsonReader:
+	data = ''
+
+	def __init__(self):
+		pass
 
 def convertFramesToVideo(ffmpegCall):
 	framesDirectory = framePrepObject.tempFramesDirectory
-	ffmpegCall.fullBatchPath = programDirectory + '\\' + 'ffmpeg.exe '
+	ffmpegCall.fullBatchPath = gProgramDirectory + '\\' + 'ffmpeg.exe '
 	ffmpegCall.videoFramerate = '-r ' + data['Properties']['Framerate'] + ' '
 	ffmpegCall.parameter1 = '-f image2 '
 	ffmpegCall.inputFile = '-i ' + '"' + framesDirectory + '\\' + getFilePrefix(os.listdir(framesDirectory + '\\')[0]) + r'.%%04d' + getFileType() + '" '
 	ffmpegCall.outputResolution = '-s ' + data['Properties']['OutputWidth'] + 'x' + data['Properties']['OutputHeight'] + ' '
 	ffmpegCall.outputFileDir = tempfile.gettempdir()+ '\\'
-	ffmpegCall.outputFileName = videoTitle +'.mp4'
+	ffmpegCall.outputFileName = gVideoTitle +'.mp4'
 	ffmpegCall.outputFile = ffmpegCall.outputFileDir + ffmpegCall.outputFileName
 
 	ffmpegCall.createBatchFile()
@@ -243,9 +269,9 @@ def watchDirectoryForFrames(_currentFrameCount):
 	return _currentFrameCount
 
 def uploadToYoutube():
-	fullBatchPath = programDirectory + '\\Python34\\python.exe ' + programDirectory + '\\upload_video.py --file '
-	videoPath = '"' + programDirectory + '\\' + ffmpegCall.outputFileName + '" '
-	videoTitleParam = ' --title "' + videoTitle + '"'
+	fullBatchPath = gProgramDirectory + '\\Python34\\python.exe ' + gProgramDirectory + '\\upload_video.py --file '
+	videoPath = '"' + gProgramDirectory + '\\' + ffmpegCall.outputFileName + '" '
+	videoTitleParam = ' --title "' + gVideoTitle + '"'
 	tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
 	tempBatFile.write(bytes(fullBatchPath + videoPath + videoTitleParam, 'UTF-8'))
 	tempBatFile.close()
@@ -270,28 +296,23 @@ def shutdown():
 	exit('Program ended. Press any key to close window.')
 
 
-
-
-
-
-
-videoTitle = input('Enter video title: ')
-
-if len(sys.argv) < 2:
-	log('No frame directory supplied. Drag frame folder onto program.')
-	shutdown()
-
-programDirectory = os.path.dirname(sys.argv[0])
-framesDirectory = str(sys.argv[1])
+#process input arguments
+gArgs = Args()
+gProgramDirectory = gArgs.programDirectory
 
 # Setup log file for each session
-logging.basicConfig(filename=programDirectory + '\log-' + time.strftime("%H%M%S%d%m%y", time.localtime()) + '.log',level=logging.DEBUG)
+logging.basicConfig(filename=gProgramDirectory + '\log-' + time.strftime("%H%M%S%d%m%y", time.localtime()) + '.log',level=logging.DEBUG)
+
+gVideoTitle = input('Enter video title: ')
+
+framesDirectory = str(sys.argv[1])
+
 
 log('Frame directory: ' + framesDirectory)
 
 #read config file
 #todo handle missing config file
-with open(programDirectory + '\Config.json') as data_file:
+with open(gProgramDirectory + '\Config.json') as data_file:
  	data = json.load(data_file)
 
 
