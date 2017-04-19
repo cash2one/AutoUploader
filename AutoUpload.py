@@ -8,12 +8,17 @@ import pdb
 import logging
 import shutil
 
+#todo fix uploading
 #todo carriage return frame status
 #todo watch frame location indefinitely if the supplied location is empty
 #todo avoid upscaling video if supplied resolution is smaller than the resolution in the config
 #todo copy frames as they being made
 #todo email after the video is uploaded
 #todo move log to output folder
+
+#todo
+# frames/video -> video -> youtube
+
 
 """
 normal process
@@ -22,32 +27,32 @@ quick convert existing video
 """
 
 class FFmpegObject:
-	fullBatchPath = ''
-	videoFramerate = ''
-	parameter1 = ''
-	inputFile = ''
-	outputResolution = ''
-	outputFileDir = ''
-	outputFileName = ''
-	outputFile = ''
+    fullBatchPath = ''
+    videoFramerate = ''
+    parameter1 = ''
+    inputFile = ''
+    outputResolution = ''
+    outputFileDir = ''
+    outputFileName = ''
+    outputFile = ''
 
-	def createBatchFile(self):
-		# Create temporary batch file to call ffmpeg
-		tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
-		tempBatFile.write(bytes(self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputResolution + self.outputFile, 'UTF-8'))
-		tempBatFile.close()
+    def createBatchFile(self):
+        # Create temporary batch file to call ffmpeg
+        tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
+        tempBatFile.write(bytes(self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputResolution + self.outputFile, 'UTF-8'))
+        tempBatFile.close()
 
-		log('Batch arguments: ' + self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputResolution + self.outputFile)
-		log('Batch file created.')
+        log('Batch arguments: ' + self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputResolution + self.outputFile)
+        log('Batch file created.')
 
-		print(tempBatFile.name)
+        print(tempBatFile.name)
 
-		subprocess.call(tempBatFile.name)
+        subprocess.call(tempBatFile.name)
 
-		log('Batch program returned')
+        log('Batch program returned')
 
-		#remove temp batch file
-		os.remove(tempBatFile.name)
+        #remove temp batch file
+        os.remove(tempBatFile.name)
 
 #copy all frames to a temp location
 #determine the filetype of the frames
@@ -56,244 +61,251 @@ class FFmpegObject:
 #top and tail the frames
 #rename the frames into an ordered sequence
 class FramePrep:
-	
-	framesDirectory = ''
-	tempFramesDirectory = ''
-	filePrefix = ''
-	fileNumberinglength = ''
-	fileSuffix = ''
+    
+    framesDirectory = ''
+    tempFramesDirectory = ''
+    filePrefix = ''
+    fileNumberinglength = ''
+    fileSuffix = ''
 
-	def __init__(self, frameDir):
-		self.framesDirectory = frameDir
-		self.copyTempFrames()
-		self.determineFrameAttributes()
-		self.removeNonFrameObjects()
-		self.getSortedFrameList()
-		self.topAndTail()
-		self.renameFramesToSortedList()
-		
+    def __init__(self, frameDir):
+        self.framesDirectory = frameDir
+        self.copyTempFrames()
+        self.determineFrameAttributes()
+        self.removeNonFrameObjects()
+        self.getSortedFrameList()
+        self.topAndTail()
+        self.renameFramesToSortedList()
+        
 
-	#copy only image files to temp directory
-	def copyTempFrames(self):
-		suffixes = ('.png', '.jpg', '.jpeg', '.tga', '.tiff')
-		self.tempFramesDirectory = self.framesDirectory + "\\temp\\"
-		#make temp directory if it doesn't already exist. If it does, clear the directory before we copy anything to it
-		if not os.path.isdir(framesDirectory + "\\temp\\"):
-			os.mkdir(framesDirectory + "\\temp\\")
-		else:
-			for existingFile in os.listdir(self.tempFramesDirectory):
-				os.remove(self.tempFramesDirectory + '\\' + existingFile)
+    #copy only image files to temp directory
+    def copyTempFrames(self):
+        suffixes = ('.png', '.jpg', '.jpeg', '.tga', '.tiff')
+        self.tempFramesDirectory = self.framesDirectory + "\\temp\\"
+        #make temp directory if it doesn't already exist. If it does, clear the directory before we copy anything to it
+        if not os.path.isdir(framesDirectory + "\\temp\\"):
+            os.mkdir(framesDirectory + "\\temp\\")
+        else:
+            for existingFile in os.listdir(self.tempFramesDirectory):
+                os.remove(self.tempFramesDirectory + '\\' + existingFile)
 
-		for file in os.listdir(self.framesDirectory):
-			if file.endswith(suffixes):
-				shutil.copy(self.framesDirectory + '\\' + file, self.tempFramesDirectory + file)
-			else:
-				print('File ' + file + ' was not copied')
-		return
+        for file in os.listdir(self.framesDirectory):
+            if file.endswith(suffixes):
+                shutil.copy(self.framesDirectory + '\\' + file, self.tempFramesDirectory + file)
+            else:
+                print('File ' + file + ' was not copied')
+        return
 
-	def determineFrameAttributes(self):
-		tempFilename = os.listdir(self.tempFramesDirectory)[0]
-		print (os.listdir(self.tempFramesDirectory)[0]) 
+    def determineFrameAttributes(self):
+        tempFilename = os.listdir(self.tempFramesDirectory)[0]
+        print (os.listdir(self.tempFramesDirectory)[0]) 
 
-		#get the file extension
-		characterIndex = len(tempFilename) - 1
-		while True:
-			if tempFilename[characterIndex] == '.':
-				break
-			characterIndex = characterIndex - 1
-		self.fileSuffix = str((tempFilename[characterIndex:]))
+        #get the file extension
+        characterIndex = len(tempFilename) - 1
+        while True:
+            if tempFilename[characterIndex] == '.':
+                break
+            characterIndex = characterIndex - 1
+        self.fileSuffix = str((tempFilename[characterIndex:]))
 
-		tempFilename = str((tempFilename[:characterIndex]))
-		print(tempFilename)
+        tempFilename = str((tempFilename[:characterIndex]))
+        print(tempFilename)
 
-		#find how many sequence numbers exist
-		characterIndex = len(tempFilename) - 1
-		numeralDigits = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
-		while True:
-			if not tempFilename[characterIndex] in numeralDigits:
-				break
-			characterIndex = characterIndex - 1
-		self.fileNumberinglength = (len(tempFilename) - 1) - characterIndex
+        #find how many sequence numbers exist
+        characterIndex = len(tempFilename) - 1
+        numeralDigits = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+        while True:
+            if not tempFilename[characterIndex] in numeralDigits:
+                break
+            characterIndex = characterIndex - 1
+        self.fileNumberinglength = (len(tempFilename) - 1) - characterIndex
 
-		self.filePrefix = str((tempFilename[:characterIndex + 1]))
-		print('numbering length: ' + str(self.fileNumberinglength))
-		print(tempFilename)		
+        self.filePrefix = str((tempFilename[:characterIndex + 1]))
+        print('numbering length: ' + str(self.fileNumberinglength))
+        print(tempFilename)     
 
-		#FirstPersonExampleMap.0001.jpg
-		return
+        #FirstPersonExampleMap.0001.jpg
+        return
 
-	def removeNonFrameObjects(self):
-		return
+    def removeNonFrameObjects(self):
+        return
 
-	def getSortedFrameList(self):
-		return
+    def getSortedFrameList(self):
+        return
 
-	def topAndTail(self):
-		topAmount = data['Properties']['NumStartingFramesToSkip']
-		tailAmount = data['Properties']['NumEndingFramesToSkip']
-		currentTrimAmount = 0
-		currentCheckIndex = 0
-		while True:
-			if currentTrimAmount == int(topAmount):
-				break
-			currentFile = os.listdir(self.tempFramesDirectory)[currentCheckIndex]
-			if currentFile.startswith(self.filePrefix):
-				os.remove(self.tempFramesDirectory + "\\" + currentFile)
-				currentTrimAmount = currentTrimAmount + 1
-			else:
-				currentCheckIndex = currentCheckIndex + 1
-		
+    def topAndTail(self):
+        topAmount = gConfig.getValue('Properties', 'NumStartingFramesToSkip')
+        tailAmount = gConfig.getValue('Properties', 'NumEndingFramesToSkip')
+        currentTrimAmount = 0
+        currentCheckIndex = 0
+        while True:
+            if currentTrimAmount == int(topAmount):
+                break
+            currentFile = os.listdir(self.tempFramesDirectory)[currentCheckIndex]
+            if currentFile.startswith(self.filePrefix):
+                os.remove(self.tempFramesDirectory + "\\" + currentFile)
+                currentTrimAmount = currentTrimAmount + 1
+            else:
+                currentCheckIndex = currentCheckIndex + 1
+        
 
-		currentTrimAmount = 0
-		currentCheckIndex = 0
-		while True:
-			if currentTrimAmount == int(tailAmount):
-				break
-			lastIndex = len(os.listdir(self.tempFramesDirectory)) - 1
-			currentFile = (os.listdir(self.tempFramesDirectory)[lastIndex - currentCheckIndex])
-			if currentFile.startswith(self.filePrefix):
-				os.remove(self.tempFramesDirectory + "\\" + currentFile)
-				currentTrimAmount = currentTrimAmount + 1
-			else:
-				currentCheckIndex = currentCheckIndex + 1
-		return
+        currentTrimAmount = 0
+        currentCheckIndex = 0
+        while True:
+            if currentTrimAmount == int(tailAmount):
+                break
+            lastIndex = len(os.listdir(self.tempFramesDirectory)) - 1
+            currentFile = (os.listdir(self.tempFramesDirectory)[lastIndex - currentCheckIndex])
+            if currentFile.startswith(self.filePrefix):
+                os.remove(self.tempFramesDirectory + "\\" + currentFile)
+                currentTrimAmount = currentTrimAmount + 1
+            else:
+                currentCheckIndex = currentCheckIndex + 1
+        return
 
-	def renameFramesToSortedList(self):
-		count = 0
-		for file in os.listdir(self.tempFramesDirectory):
-			if file.startswith(self.filePrefix): 
-				os.rename(self.tempFramesDirectory + '\\' + file, self.tempFramesDirectory + '\\' + self.filePrefix + str(count).zfill(self.fileNumberinglength) + self.fileSuffix)
-				count += 1
+    def renameFramesToSortedList(self):
+        count = 0
+        for file in os.listdir(self.tempFramesDirectory):
+            if file.startswith(self.filePrefix): 
+                os.rename(self.tempFramesDirectory + '\\' + file, self.tempFramesDirectory + '\\' + self.filePrefix + str(count).zfill(self.fileNumberinglength) + self.fileSuffix)
+                count += 1
 
-		return
+        return
 
-	def removeTempFrames(self):
-		shutil.rmtree(self.tempFramesDirectory)
+    def removeTempFrames(self):
+        shutil.rmtree(self.tempFramesDirectory)
 
 #
 class Args:
 
-	args = ''
-	programDirectory = ''
+    args = ''
+    programDirectory = ''
 
-	argUpload = False
+    argUpload = False
 
-	def __init__(self):
-		args = sys.argv
-		if len(sys.argv) < 2:
-			log('No frame directory supplied. Drag frame folder or movie file onto program.')
-			shutdown()
+    def __init__(self):
+        self.args = sys.argv
+        if len(self.args) < 2:
+            log('No frame directory supplied. Drag frame folder or movie file onto program.')
+            shutdown()
 
-		self.findArguments()
+        self.findArguments()
 
-	def findArguments(self):
-		self.programDirectory = os.path.dirname(sys.argv[0])
+    def findArguments(self):
+        self.programDirectory = os.path.dirname(sys.argv[0])
 
-		if '-upload' in self.args:
-			self.argUpload = True
+        if '-upload' in self.args:
+            self.argUpload = True
 
+#todo handle missing config file
 class JsonReader:
-	data = ''
+    data = ''
 
-	def __init__(self):
-		pass
+    def __init__(self):
+        with open(gProgramDirectory + '\Config.json') as data_file:
+            self.data = json.load(data_file)
+        pass
+
+    def getValue(self, category, value):
+        return self.data[category][value]
+        pass
 
 def convertFramesToVideo(ffmpegCall):
-	framesDirectory = framePrepObject.tempFramesDirectory
-	ffmpegCall.fullBatchPath = gProgramDirectory + '\\' + 'ffmpeg.exe '
-	ffmpegCall.videoFramerate = '-r ' + data['Properties']['Framerate'] + ' '
-	ffmpegCall.parameter1 = '-f image2 '
-	ffmpegCall.inputFile = '-i ' + '"' + framesDirectory + '\\' + getFilePrefix(os.listdir(framesDirectory + '\\')[0]) + r'.%%04d' + getFileType() + '" '
-	ffmpegCall.outputResolution = '-s ' + data['Properties']['OutputWidth'] + 'x' + data['Properties']['OutputHeight'] + ' '
-	ffmpegCall.outputFileDir = tempfile.gettempdir()+ '\\'
-	ffmpegCall.outputFileName = gVideoTitle +'.mp4'
-	ffmpegCall.outputFile = ffmpegCall.outputFileDir + ffmpegCall.outputFileName
+    framesDirectory = framePrepObject.tempFramesDirectory
+    ffmpegCall.fullBatchPath = gProgramDirectory + '\\' + 'ffmpeg.exe '
+    ffmpegCall.videoFramerate = '-r ' + gConfig.getValue('Properties', 'Framerate') + ' '
+    ffmpegCall.parameter1 = '-f image2 '
+    ffmpegCall.inputFile = '-i ' + '"' + framesDirectory + '\\' + getFilePrefix(os.listdir(framesDirectory + '\\')[0]) + r'.%%04d' + getFileType() + '" '
+    ffmpegCall.outputResolution = '-s ' + gConfig.getValue('Properties', 'OutputWidth') + 'x' + gConfig.getValue('Properties', 'OutputHeight') + ' '
+    ffmpegCall.outputFileDir = tempfile.gettempdir()+ '\\'
+    ffmpegCall.outputFileName = gVideoTitle +'.mp4'
+    ffmpegCall.outputFile = ffmpegCall.outputFileDir + ffmpegCall.outputFileName
 
-	ffmpegCall.createBatchFile()
+    ffmpegCall.createBatchFile()
 
 
 
-	return ffmpegCall
+    return ffmpegCall
 
 def getFrameCount(_frameDir):
-	return len(os.listdir(_frameDir))
+    return len(os.listdir(_frameDir))
 
 def getFileType():
-	suffixes = ('.png', '.jpg', '.jpeg', '.tga', '.tiff')
-	currentIndex = 0
-	while True:
-		filename = os.listdir(framesDirectory + '\\')[currentIndex]
-		characterIndex = len(filename) - 1
-		while True:
-			if filename[characterIndex] == '.':
-				break
-			characterIndex = characterIndex - 1
-			fileExtension = str((filename[characterIndex:]))
-			if fileExtension in suffixes:
-				return str((filename[characterIndex:]))
-			else:
-				currentIndex += 1
-	
+    suffixes = ('.png', '.jpg', '.jpeg', '.tga', '.tiff')
+    currentIndex = 0
+    while True:
+        filename = os.listdir(framesDirectory + '\\')[currentIndex]
+        characterIndex = len(filename) - 1
+        while True:
+            if filename[characterIndex] == '.':
+                break
+            characterIndex = characterIndex - 1
+            fileExtension = str((filename[characterIndex:]))
+            if fileExtension in suffixes:
+                return str((filename[characterIndex:]))
+            else:
+                currentIndex += 1
+    
 def getFilePrefix(filename):
-	# filename = os.listdir(framesDirectory + '\\')[0]
-	characterIndex = 0
-	while True:
-		if filename[characterIndex] == '.':
-			break
-		characterIndex = characterIndex + 1
-	return str(filename[:characterIndex])
+    # filename = os.listdir(framesDirectory + '\\')[0]
+    characterIndex = 0
+    while True:
+        if filename[characterIndex] == '.':
+            break
+        characterIndex = characterIndex + 1
+    return str(filename[:characterIndex])
 
 #todo handle mismatch with only 2 files (could cause infinite loop)
 def getLastFrameName():
-	dirList = os.listdir(framesDirectory)
-	dirList.sort()
-	currentLastFileSearchIndex = 1
-	while True:
-		lastFrameName = dirList[len(dirList) - currentLastFileSearchIndex]
-		if getFilePrefix(lastFrameName) == getFilePrefix(os.listdir(framesDirectory + '\\')[0]): #if the prefixes of the first and last file match
-			return lastFrameName
-		currentLastFileSearchIndex = currentLastFileSearchIndex + 1
+    dirList = os.listdir(framesDirectory)
+    dirList.sort()
+    currentLastFileSearchIndex = 1
+    while True:
+        lastFrameName = dirList[len(dirList) - currentLastFileSearchIndex]
+        if getFilePrefix(lastFrameName) == getFilePrefix(os.listdir(framesDirectory + '\\')[0]): #if the prefixes of the first and last file match
+            return lastFrameName
+        currentLastFileSearchIndex = currentLastFileSearchIndex + 1
 
 def watchDirectoryForFrames(_currentFrameCount):
-	while True:
-		_lastframeCount = _currentFrameCount
-		_currentFrameCount = getFrameCount(framesDirectory)
+    while True:
+        _lastframeCount = _currentFrameCount
+        _currentFrameCount = getFrameCount(framesDirectory)
 
-		if (_lastframeCount == _currentFrameCount):
-			break
+        if (_lastframeCount == _currentFrameCount):
+            break
 
-		print('Last frame count: ' + str(_lastframeCount))
-		print('Current frame count: ' + str(_currentFrameCount))
-		sleepInterval = float(data['Properties']['FrameDirectoryWatchInterval'])
-		time.sleep(sleepInterval)
-	return _currentFrameCount
+        print('Last frame count: ' + str(_lastframeCount))
+        print('Current frame count: ' + str(_currentFrameCount))
+        sleepInterval = float(gConfig.getValue('Properties', 'FrameDirectoryWatchInterval'))
+        time.sleep(sleepInterval)
+    return _currentFrameCount
 
 def uploadToYoutube():
-	fullBatchPath = gProgramDirectory + '\\Python34\\python.exe ' + gProgramDirectory + '\\upload_video.py --file '
-	videoPath = '"' + gProgramDirectory + '\\' + ffmpegCall.outputFileName + '" '
-	videoTitleParam = ' --title "' + gVideoTitle + '"'
-	tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
-	tempBatFile.write(bytes(fullBatchPath + videoPath + videoTitleParam, 'UTF-8'))
-	tempBatFile.close()
+    fullBatchPath = gProgramDirectory + '\\Python34\\python.exe ' + gProgramDirectory + '\\upload_video.py --file '
+    videoPath = '"' + gProgramDirectory + '\\' + ffmpegCall.outputFileName + '" '
+    videoTitleParam = ' --title "' + gVideoTitle + '"'
+    tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
+    tempBatFile.write(bytes(fullBatchPath + videoPath + videoTitleParam, 'UTF-8'))
+    tempBatFile.close()
 
-	log('Batch file created.')
+    log('Batch file created.')
 
-	print(tempBatFile.name)
+    print(tempBatFile.name)
 
-	subprocess.call(tempBatFile.name)
+    subprocess.call(tempBatFile.name)
 
-	log('Batch program returned')
+    log('Batch program returned')
 
-	#remove temp batch file
-	os.remove(tempBatFile.name)
+    #remove temp batch file
+    os.remove(tempBatFile.name)
 
 
 def log(logMessage):
-	logging.debug(time.strftime("%H%M%S", time.localtime()) + ': ' + logMessage)
-	print(logMessage)
+    logging.debug(time.strftime("%H%M%S", time.localtime()) + ': ' + logMessage)
+    print(logMessage)
 
 def shutdown():
-	exit('Program ended. Press any key to close window.')
+    exit('Program ended. Press any key to close window.')
 
 
 #process input arguments
@@ -311,9 +323,7 @@ framesDirectory = str(sys.argv[1])
 log('Frame directory: ' + framesDirectory)
 
 #read config file
-#todo handle missing config file
-with open(gProgramDirectory + '\Config.json') as data_file:
- 	data = json.load(data_file)
+gConfig = JsonReader()
 
 
 # watch directory for frames
@@ -321,9 +331,9 @@ currentFrameCount = 0
 currentFrameCount = watchDirectoryForFrames(currentFrameCount)
 
 
-if currentFrameCount < float(data['Properties']['MinimumFrameCount']):
-	log('Error: Supplied frame directory has fewer than MinimumFrameCount files after waiting for the FrameDirectoryWatchInterval in config.json. Either select the correct directory or increase FrameDirectoryWatchInterval time')
-	shutdown()
+if currentFrameCount < int(gConfig.getValue('Properties', 'MinimumFrameCount')):
+    log('Error: Supplied frame directory has fewer than MinimumFrameCount files after waiting for the FrameDirectoryWatchInterval in config.json. Either select the correct directory or increase FrameDirectoryWatchInterval time')
+    shutdown()
 
 log('Found ' + str(currentFrameCount) + ' frames in directory. Starting sequence creation...')
 
@@ -340,10 +350,10 @@ framePrepObject.removeTempFrames()
 shutil.move(ffmpegCall.outputFile, framesDirectory + '\\' + ffmpegCall.outputFileName)
 log('Output video moved to ' + framesDirectory + '\\' + ffmpegCall.outputFileName)
 
-if '-upload' in sys.argv:
-	uploadToYoutube()
+if gArgs.argUpload == True:
+    uploadToYoutube()
 else:
-	print("No -upload parameter passed. Skipping upload")
+    print("No -upload parameter passed. Skipping upload")
 
 
 # send email notification
