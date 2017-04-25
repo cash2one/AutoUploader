@@ -40,9 +40,9 @@ class FFmpegObject:
         tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
         #todo figure out why it freaks out on frame mode if you put param1 after inputfile
         if gArgs.inputArgIsDir:
-            tempBatFile.write(bytes(self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputResolution + self.outputFile, 'UTF-8'))
+            tempBatFile.write(bytes(self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputResolution + '"'+self.outputFile+'"', 'UTF-8'))
         else:
-            tempBatFile.write(bytes(self.fullBatchPath + self.videoFramerate + self.inputFile + self.parameter1 + self.outputResolution + self.outputFile, 'UTF-8'))
+            tempBatFile.write(bytes(self.fullBatchPath + self.videoFramerate + self.inputFile + self.parameter1 + self.outputResolution + '"'+self.outputFile+'"', 'UTF-8'))
         tempBatFile.close()
         log('Batch arguments: ' + self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputResolution + self.outputFile)
         log('Batch file created.')
@@ -236,7 +236,7 @@ def convertFramesToVideo(ffmpegCall):
     ffmpegCall.inputFile = '-i ' + '"' + framesDirectory + '\\' + getFilePrefix(os.listdir(framesDirectory + '\\')[0]) + r'.%%04d' + getFileType() + '" '
     ffmpegCall.outputResolution = '-s ' + gConfig.getValue('Properties', 'OutputWidth') + 'x' + gConfig.getValue('Properties', 'OutputHeight') + ' '
     ffmpegCall.outputFileDir = tempfile.gettempdir()+ '\\'
-    ffmpegCall.outputFileName = gVideoTitle +'.mp4 '
+    ffmpegCall.outputFileName = gVideoTitle +'.mp4'
     ffmpegCall.outputFile = ffmpegCall.outputFileDir + ffmpegCall.outputFileName
 
     ffmpegCall.createBatchFile()
