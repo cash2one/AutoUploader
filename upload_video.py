@@ -191,9 +191,6 @@ def WriteJSON(VideoTitle, VideoURL):
   with open ('UploadInfo.json', 'w') as outfile:
     json.dump(data, outfile)
 
-WriteJSON('hello', 'url')
-
-
 if __name__ == '__main__':
   argparser.add_argument("--file", required=True, help="Video file to upload")
   argparser.add_argument("--title", help="Video title", default="Test Title")
