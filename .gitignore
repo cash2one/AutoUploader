@@ -89,3 +89,7 @@ ENV/
 .ropeproject
 
 python34/*
+
+UploadInfo.json
+gmail-python-quickstart.json
+upload_video.py-oauth2.json
