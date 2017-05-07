@@ -6,6 +6,9 @@ import os
 import random
 import sys
 import time
+import tempfile
+import subprocess
+import json
 
 from apiclient.discovery import build
 from apiclient.errors import HttpError
@@ -122,6 +125,24 @@ def initialize_upload(youtube, options):
 
   resumable_upload(insert_request)
 
+gProgramDirectory = os.path.dirname(sys.argv[0])
+def sendCompletionEmail(videoID):
+    fullBatchPath = gProgramDirectory + '\\Python34\\python.exe ' + gProgramDirectory + '\\send_email.py '
+    videoURL = 'https://www.youtube.com/watch?v=' + videoID + ' ' 
+    tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
+    tempBatFile.write(bytes(fullBatchPath, 'UTF-8'))
+    tempBatFile.close()
+    WriteJSON(args.title, videoURL)
+
+    print('Sending confirmation email...')
+
+    subprocess.call(tempBatFile.name)
+
+
+    #remove temp batch file
+    os.remove(tempBatFile.name)
+
+
 # This method implements an exponential backoff strategy to resume a
 # failed upload.
 def resumable_upload(insert_request):
@@ -134,6 +155,7 @@ def resumable_upload(insert_request):
       status, response = insert_request.next_chunk()
       if 'id' in response:
         print ("Video id '%s' was successfully uploaded." % response['id'])
+        sendCompletionEmail(response['id'])
       else:
         exit("The upload failed with an unexpected response: %s" % response)
     except (HttpError, e):
@@ -155,6 +177,22 @@ def resumable_upload(insert_request):
       sleep_seconds = random.random() * max_sleep
       print ("Sleeping %f seconds and then retrying..." % sleep_seconds)
       time.sleep(sleep_seconds)
+
+
+def WriteJSON(VideoTitle, VideoURL):
+  data = {}
+  data['VideoProperties'] = []
+  data['VideoProperties'].append(
+    {
+      "VideoTitle" : VideoTitle,
+      "VideoURL" : VideoURL
+    })
+
+  with open ('UploadInfo.json', 'w') as outfile:
+    json.dump(data, outfile)
+
+WriteJSON('hello', 'url')
+
 
 if __name__ == '__main__':
   argparser.add_argument("--file", required=True, help="Video file to upload")
