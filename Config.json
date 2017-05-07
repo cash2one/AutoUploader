@@ -1,6 +1,5 @@
 {
-    "Properties": 
-    {
+    "Properties": {
     "Framerate"	: "50",
     "OutputWidth" : "1920",
     "OutputHeight" : "1080",
@@ -16,5 +15,11 @@
     "OutputWidth" : "1920",
     "OutputHeight" : "1080",
     "Bitrate": "8000"
+    },
+
+    "Email" : {
+        "Sender" : "email@address.com",
+        "Recipients" : "email1@address.com; email@address.com"
     }
+
 }
