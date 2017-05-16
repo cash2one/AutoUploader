@@ -76,7 +76,7 @@ def create_message(sender, to, subject, message_text):
   message['to'] = to
   message['from'] = sender
   message['subject'] = subject
-  raw = base64.urlsafe_b64encode(message.as_bytes())
+  raw = base64.urlsafe_b64encode(message.as_string())
   raw = raw.decode()
   return {'raw': raw}
 

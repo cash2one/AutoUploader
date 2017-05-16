@@ -40,9 +40,9 @@ class FFmpegObject:
         tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
         #todo figure out why it freaks out on frame mode if you put param1 after inputfile
         if gArgs.inputArgIsDir:
-            tempBatFile.write(bytes(self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputResolution + '"'+self.outputFile+'"', 'UTF-8'))
+            tempBatFile.write(self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputResolution + '"'+self.outputFile+'"')
         else:
-            tempBatFile.write(bytes(self.fullBatchPath + self.videoFramerate + self.inputFile + self.parameter1 + self.outputResolution + '"'+self.outputFile+'"', 'UTF-8'))
+            tempBatFile.write(self.fullBatchPath + self.videoFramerate + self.inputFile + self.parameter1 + self.outputResolution + '"'+self.outputFile+'"')
         tempBatFile.close()
         log('Batch arguments: ' + self.fullBatchPath + self.videoFramerate + self.parameter1 + self.inputFile + self.outputResolution + self.outputFile)
         log('Batch file created.')
@@ -365,11 +365,11 @@ def countBytes():
     log('Found ' + str(currentByteCount) + ' bytes in file. Starting conversion...')
 
 def uploadToYoutube():
-    fullBatchPath = gProgramDirectory + '\\Python34\\python.exe ' + gProgramDirectory + '\\upload_video.py --file '
+    fullBatchPath = gProgramDirectory + '\\Python27\\python.exe ' + gProgramDirectory + '\\upload_video.py --file '
     videoPath = '"' + os.path.dirname(gInputPath) + '\\' + ffmpegCall.outputFileName + '" '
     videoTitleParam = ' --title "' + gVideoTitle + '"'
     tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
-    tempBatFile.write(bytes(fullBatchPath + videoPath + videoTitleParam, 'UTF-8'))
+    tempBatFile.write(fullBatchPath + videoPath + videoTitleParam)
     tempBatFile.close()
 
     log('Batch file created.')
@@ -399,7 +399,7 @@ gProgramDirectory = gArgs.programDirectory
 # Setup log file for each session
 logging.basicConfig(filename=gProgramDirectory + '\log-' + time.strftime("%H%M%S%d%m%y", time.localtime()) + '.log',level=logging.DEBUG)
 
-gVideoTitle = input('Enter video title: ')
+gVideoTitle = raw_input('Enter video title: ')
 
 gInputPath = str(sys.argv[1])
 

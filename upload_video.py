@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import http.client
+import httplib
 import httplib2
 import os
 import random
@@ -26,10 +26,10 @@ httplib2.RETRIES = 1
 MAX_RETRIES = 10
 
 # Always retry when these exceptions are raised.
-RETRIABLE_EXCEPTIONS = (httplib2.HttpLib2Error, IOError, http.client.NotConnected,
-  http.client.IncompleteRead, http.client.ImproperConnectionState,
-  http.client.CannotSendRequest, http.client.CannotSendHeader,
-  http.client.ResponseNotReady, http.client.BadStatusLine)
+RETRIABLE_EXCEPTIONS = (httplib2.HttpLib2Error, IOError, httplib.NotConnected,
+  httplib.IncompleteRead, httplib.ImproperConnectionState,
+  httplib.CannotSendRequest, httplib.CannotSendHeader,
+  httplib.ResponseNotReady, httplib.BadStatusLine)
 
 # Always retry when an apiclient.errors.HttpError with one of these status
 # codes is raised.
@@ -127,10 +127,10 @@ def initialize_upload(youtube, options):
 
 gProgramDirectory = os.path.dirname(sys.argv[0])
 def sendCompletionEmail(videoID):
-    fullBatchPath = gProgramDirectory + '\\Python34\\python.exe ' + gProgramDirectory + '\\send_email.py '
+    fullBatchPath = gProgramDirectory + '\\Python27\\python.exe ' + gProgramDirectory + '\\send_email.py '
     videoURL = 'https://www.youtube.com/watch?v=' + videoID + ' ' 
     tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
-    tempBatFile.write(bytes(fullBatchPath, 'UTF-8'))
+    tempBatFile.write(fullBatchPath)
     tempBatFile.close()
     WriteJSON(args.title, videoURL)
 
