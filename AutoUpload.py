@@ -249,7 +249,7 @@ def convertFramesToVideo(ffmpegCall):
 
 def convertVideo():
     ffmpegCall.fullBatchPath = gProgramDirectory + '\\' + 'ffmpeg.exe '
-    ffmpegCall.videoFramerate = '-r ' + gConfig.getValue('Properties', 'Framerate') + ' '
+    ffmpegCall.videoFramerate = ' '
     ffmpegCall.parameter1 = '-c:v libx264 '
     ffmpegCall.inputFile = '-i ' + '"' + gInputPath + '" '
     ffmpegCall.outputResolution = '-s ' + gConfig.getValue('Properties', 'OutputWidth') + 'x' + gConfig.getValue('Properties', 'OutputHeight') + ' '
