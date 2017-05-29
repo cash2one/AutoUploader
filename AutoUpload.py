@@ -189,6 +189,7 @@ class Args:
     inputArgIsFile = False
     inputArgIsDir = False
     argUpload = False
+    argFilename = ''
 
     def __init__(self):
         self.args = sys.argv
@@ -205,6 +206,10 @@ class Args:
 
         if '-upload' in self.args:
             self.argUpload = True
+
+        for arg in sys.argv:
+            if arg.startswith('-VideoTitle='):
+                self.argFilename = arg[12:]
 
     #figure out if the input passed in is a directory or a file
     def determineInputType(self):
@@ -401,7 +406,10 @@ gProgramDirectory = gArgs.programDirectory
 # Setup log file for each session
 logging.basicConfig(filename=gProgramDirectory + '\log-' + time.strftime("%H%M%S%d%m%y", time.localtime()) + '.log',level=logging.DEBUG)
 
-gVideoTitle = raw_input('Enter video title: ')
+if gArgs.argFilename is '':
+    gVideoTitle = raw_input('Enter video title: ')
+else:
+    gVideoTitle = gArgs.argFilename
 
 gInputPath = str(sys.argv[1])
 
