@@ -12,6 +12,26 @@ from oauth2client.file import Storage
 import email.mime.text
 import base64
 
+gArgVideoTitle = ''
+gArgVideoURL = ''
+
+#preprocess custom arguments before the api argparser does so we can use custom args
+for arg in sys.argv:
+    if arg.startswith('-VideoTitle='):
+        gArgVideoTitle = arg[12:]
+    elif  arg.startswith('-VideoURL='):
+        gArgVideoURL = arg[10:]
+
+    
+for arg in sys.argv:
+    sys.argv.remove(arg)
+
+if gArgVideoTitle is '':
+    exit('No -VideoTitle= argument was found')
+if gArgVideoURL is '':
+    exit('No -VideoURL= argument was found')
+
+
 try:
     import argparse
     flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
@@ -20,8 +40,6 @@ except ImportError:
 
 """
 TODO: credentials file should be stored in the local directory, not the user directory
-TODO: video properties should be read from json
-TODO: email data should be read from json
 """
 
 # If modifying these scopes, delete your previously saved credentials
@@ -112,25 +130,16 @@ def main():
     service = discovery.build('gmail', 'v1', http=http)
 
     results = service.users().labels().list(userId='me').execute()
-    """
-    labels = results.get('labels', [])
 
-    if not labels:
-        print('No labels found.')
-    else:
-      print('Labels:')
-      for label in labels:
-        print(label['name'])
-    """   
     messageSender = gConfigJson['Email']['Sender']
     messageRecipients = gConfigJson['Email']['Recipients']
-    messageSubject = gUploadInfoJson['VideoProperties'][0]['VideoTitle'] + ' Uploaded'
+    messageSubject = gArgVideoTitle + ' Uploaded'
     messageText = '''Automatic upload process completed successfully for %s. 
 
     %s
 
     This video may still be processing, if the link fails to work or the video quality appears poor, check back in 10 minutes.
-    ''' % (gUploadInfoJson['VideoProperties'][0]['VideoTitle'], gVideoURL)
+    ''' % (gArgVideoTitle, gVideoURL)
     
 
     message = create_message(messageSender, messageRecipients, messageSubject, messageText)
@@ -144,14 +153,10 @@ gUploadInfoJson = ''
 with open(os.path.dirname(os.path.realpath(__file__)) + '\\Config.json') as data_file:
     gConfigJson = json.load(data_file)
 
-with open(os.path.dirname(os.path.realpath(__file__)) + '\\UploadInfo.json') as data_file:
-    gUploadInfoJson = json.load(data_file)
 
 
-gVideoURL = gUploadInfoJson["VideoProperties"][0]["VideoURL"]
+gVideoURL = gArgVideoURL
 
 if __name__ == '__main__':
     main()
-
-
 
