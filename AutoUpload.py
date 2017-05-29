@@ -83,14 +83,16 @@ class FramePrep:
     #copy only image files to temp directory
     def copyTempFrames(self):
         suffixes = ('.png', '.jpg', '.jpeg', '.tga', '.tiff')
-        self.tempInputDirectory = os.path.dirname(self.inputDirectory) + "\\temp\\"
+        self.tempInputDirectory = tempfile.mkdtemp(dir=os.path.dirname(self.inputDirectory))
+        self.tempInputDirectory += '\\'
         #make temp directory if it doesn't already exist. If it does, clear the directory before we copy anything to it
+        '''
         if not os.path.isdir(os.path.dirname(gInputPath) + "\\temp\\"):
             os.mkdir(os.path.dirname(gInputPath) + "\\temp\\")
         else:
             for existingFile in os.listdir(self.tempInputDirectory):
                 os.remove(self.tempInputDirectory + '\\' + existingFile)
-
+        '''
         for file in os.listdir(self.inputDirectory):
             if file.endswith(suffixes):
                 shutil.copy(self.inputDirectory + '\\' + file, self.tempInputDirectory + file)
