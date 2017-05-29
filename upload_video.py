@@ -128,11 +128,13 @@ def initialize_upload(youtube, options):
 gProgramDirectory = os.path.dirname(sys.argv[0])
 def sendCompletionEmail(videoID):
     fullBatchPath = gProgramDirectory + '\\Python27\\python.exe ' + gProgramDirectory + '\\send_email.py '
+    fullBatchPath += '-VideoTitle=' + '"' + args.title + '" '
     videoURL = 'https://www.youtube.com/watch?v=' + videoID + ' ' 
+    fullBatchPath += '-VideoURL=' + videoURL
     tempBatFile = tempfile.NamedTemporaryFile(suffix='.bat', delete=False)
     tempBatFile.write(fullBatchPath)
     tempBatFile.close()
-    WriteJSON(args.title, videoURL)
+    #WriteJSON(args.title, videoURL)
 
     print('Sending confirmation email...')
 
