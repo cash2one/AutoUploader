@@ -7,6 +7,7 @@ import json
 import pdb
 import logging
 import shutil
+import natsort
 
 #todo fix uploading #todo carriage return frame status
 #todo watch frame location indefinitely if the supplied location is empty
@@ -67,7 +68,7 @@ class FramePrep:
     inputDirectory = ''
     tempInputDirectory = ''
     filePrefix = ''
-    fileNumberinglength = ''
+    fileNumberinglength = 0
     fileSuffix = ''
 
     def __init__(self, frameDir):
@@ -100,33 +101,50 @@ class FramePrep:
                 print('File ' + file + ' was not copied')
         return
 
+    def getFileExtension(self, filename):
+        fileExtension = ''
+
+        #get the file extension
+        characterIndex = len(filename) - 1
+        while True:
+            if filename[characterIndex] == '.':
+                break
+            characterIndex = characterIndex - 1
+        fileExtension = str((filename[characterIndex:]))
+
+        return fileExtension
+
     def determineFrameAttributes(self):
         tempFilename = os.listdir(self.tempInputDirectory)[0]
         print (os.listdir(self.tempInputDirectory)[0]) 
 
         #get the file extension
-        characterIndex = len(tempFilename) - 1
-        while True:
-            if tempFilename[characterIndex] == '.':
-                break
-            characterIndex = characterIndex - 1
-        self.fileSuffix = str((tempFilename[characterIndex:]))
+        self.fileSuffix = self.getFileExtension(tempFilename)
+        print('file extension: {}').format(self.fileSuffix)
 
-        tempFilename = str((tempFilename[:characterIndex]))
-        print(tempFilename)
+        tempFilename = tempFilename.replace(self.fileSuffix, '')
+        print('filename without extension: {}').format(tempFilename)
 
-        #find how many sequence numbers exist
-        characterIndex = len(tempFilename) - 1
-        numeralDigits = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
-        while True:
-            if not tempFilename[characterIndex] in numeralDigits:
-                break
-            characterIndex = characterIndex - 1
-        self.fileNumberinglength = (len(tempFilename) - 1) - characterIndex
+        tempFileNumberingLength = 0
 
-        self.filePrefix = str((tempFilename[:characterIndex + 1]))
-        print('numbering length: ' + str(self.fileNumberinglength))
-        print(tempFilename)     
+        for file in os.listdir(self.tempInputDirectory):
+            tempPrefix = file.replace(self.fileSuffix, '')
+
+
+            #find how many sequence numbers exist
+            characterIndex = len(tempPrefix) - 1
+            numeralDigits = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+            while True:
+                if not tempPrefix[characterIndex] in numeralDigits:
+                    break
+                characterIndex -= 1
+            if (len(tempPrefix) - 1) - characterIndex > self.fileNumberinglength:
+                self.fileNumberinglength = (len(tempPrefix) - 1) - characterIndex
+                print('length: {}').format(self.fileNumberinglength)
+
+            self.filePrefix = str((tempFilename[:characterIndex + 1]))
+            print('numbering length: ' + str(self.fileNumberinglength))
+            print(tempPrefix)     
 
         #FirstPersonExampleMap.0001.jpg
         return
@@ -145,7 +163,8 @@ class FramePrep:
         while True:
             if currentTrimAmount == int(topAmount):
                 break
-            currentFile = os.listdir(self.tempInputDirectory)[currentCheckIndex]
+            sortedFileList = natsort.natsorted(os.listdir(self.tempInputDirectory))
+            currentFile = sortedFileList[currentCheckIndex]
             if currentFile.startswith(self.filePrefix):
                 os.remove(self.tempInputDirectory + "\\" + currentFile)
                 currentTrimAmount = currentTrimAmount + 1
@@ -158,8 +177,9 @@ class FramePrep:
         while True:
             if currentTrimAmount == int(tailAmount):
                 break
-            lastIndex = len(os.listdir(self.tempInputDirectory)) - 1
-            currentFile = (os.listdir(self.tempInputDirectory)[lastIndex - currentCheckIndex])
+            sortedFileList = natsort.natsorted(os.listdir(self.tempInputDirectory))
+            lastIndex = len(sortedFileList) - 1
+            currentFile = sortedFileList[lastIndex - currentCheckIndex]
             if currentFile.startswith(self.filePrefix):
                 os.remove(self.tempInputDirectory + "\\" + currentFile)
                 currentTrimAmount = currentTrimAmount + 1
@@ -169,7 +189,10 @@ class FramePrep:
 
     def renameFramesToSortedList(self):
         count = 0
-        for file in os.listdir(self.tempInputDirectory):
+        fileList = os.listdir(self.tempInputDirectory)
+        fileList = natsort.natsorted(fileList)
+        for file in fileList:
+            print(file)
             if file.startswith(self.filePrefix): 
                 os.rename(self.tempInputDirectory + '\\' + file, self.tempInputDirectory + '\\' + self.filePrefix + str(count).zfill(self.fileNumberinglength) + self.fileSuffix)
                 count += 1
@@ -236,11 +259,12 @@ class JsonReader:
         pass
 
 def convertFramesToVideo(ffmpegCall):
-    framesDirectory = framePrepObject.tempInputDirectory
+    framesDirectory = gFramePrepObject.tempInputDirectory
     ffmpegCall.fullBatchPath = gProgramDirectory + '\\' + 'ffmpeg.exe '
     ffmpegCall.videoFramerate = '-r ' + gConfig.getValue('Properties', 'Framerate') + ' '
     ffmpegCall.parameter1 = '-f image2 '
-    ffmpegCall.inputFile = '-i ' + '"' + framesDirectory + '\\' + getFilePrefix(os.listdir(framesDirectory + '\\')[0]) + r'.%%04d' + getFileType() + '" '
+    padding = r'.%%0' + str(gFramePrepObject.fileNumberinglength) + 'd'
+    ffmpegCall.inputFile = '-i ' + '"' + framesDirectory + '\\' + getFilePrefix(os.listdir(framesDirectory + '\\')[0]) + padding + getFileType() + '" '
     ffmpegCall.outputResolution = '-s ' + gConfig.getValue('Properties', 'OutputWidth') + 'x' + gConfig.getValue('Properties', 'OutputHeight') + ' '
     ffmpegCall.outputFileDir = tempfile.gettempdir()+ '\\'
     ffmpegCall.outputFileName = gVideoTitle +'.mp4'
@@ -267,6 +291,7 @@ def convertVideo():
 
 
     return ffmpegCall
+
 
 def getFrameCount(_frameDir):
     return len(os.listdir(_frameDir))
@@ -424,17 +449,18 @@ if gArgs.inputArgIsDir:
 else:
     countBytes()
 
+gFramePrepObject = ''
 
 if gArgs.inputArgIsDir:
     # top and tail frames and rename them into an ordered sequence
-    framePrepObject = FramePrep(gInputPath)
+    gFramePrepObject = FramePrep(gInputPath)
 
 # when frames are no longer being created, convert
 ffmpegCall = FFmpegObject()
 
 if gArgs.inputArgIsDir:
     convertFramesToVideo(ffmpegCall)
-    framePrepObject.removeTempFrames()
+    #gFramePrepObject.removeTempFrames()
 else:
     convertVideo()
 
