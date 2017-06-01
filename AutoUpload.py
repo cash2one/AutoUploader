@@ -461,7 +461,7 @@ ffmpegCall = FFmpegObject()
 
 if gArgs.inputArgIsDir:
     convertFramesToVideo(ffmpegCall)
-    #gFramePrepObject.removeTempFrames()
+    gFramePrepObject.removeTempFrames()
 else:
     convertVideo()
 
