@@ -116,14 +116,14 @@ class FramePrep:
 
     def determineFrameAttributes(self):
         tempFilename = os.listdir(self.tempInputDirectory)[0]
-        print (os.listdir(self.tempInputDirectory)[0]) 
+        #print (os.listdir(self.tempInputDirectory)[0]) 
 
         #get the file extension
         self.fileSuffix = self.getFileExtension(tempFilename)
-        print('file extension: {}').format(self.fileSuffix)
+        #print('file extension: {}').format(self.fileSuffix)
 
         tempFilename = tempFilename.replace(self.fileSuffix, '')
-        print('filename without extension: {}').format(tempFilename)
+        #print('filename without extension: {}').format(tempFilename)
 
         tempFileNumberingLength = 0
 
@@ -140,11 +140,11 @@ class FramePrep:
                 characterIndex -= 1
             if (len(tempPrefix) - 1) - characterIndex > self.fileNumberinglength:
                 self.fileNumberinglength = (len(tempPrefix) - 1) - characterIndex
-                print('length: {}').format(self.fileNumberinglength)
+                #print('length: {}').format(self.fileNumberinglength)
 
             self.filePrefix = str((tempFilename[:characterIndex + 1]))
-            print('numbering length: ' + str(self.fileNumberinglength))
-            print(tempPrefix)     
+            #print('numbering length: ' + str(self.fileNumberinglength))
+            #print(tempPrefix)     
 
         #FirstPersonExampleMap.0001.jpg
         return
@@ -192,7 +192,7 @@ class FramePrep:
         fileList = os.listdir(self.tempInputDirectory)
         fileList = natsort.natsorted(fileList)
         for file in fileList:
-            print(file)
+            #print(file)
             if file.startswith(self.filePrefix): 
                 os.rename(self.tempInputDirectory + '\\' + file, self.tempInputDirectory + '\\' + self.filePrefix + str(count).zfill(self.fileNumberinglength) + self.fileSuffix)
                 count += 1
@@ -241,8 +241,9 @@ class Args:
         elif os.path.isfile(self.inputArg):
             self.inputArgIsFile = True
         else:
-            log('Error: Could not determine if input was directory or file. Aborting.')
-            shutdown()
+            log('Supplied input directory is empty. Retrying...')
+            time.sleep(3)
+            self.determineInputType()
 
 
 #todo handle missing config file
@@ -358,7 +359,7 @@ def watchDirectoryForFrames(_currentFrameCount):
         if (_lastframeCount == _currentFrameCount):
             break
 
-        print('Last frame count: ' + str(_lastframeCount))
+        #print('Last frame count: ' + str(_lastframeCount))
         print('Current frame count: ' + str(_currentFrameCount))
         sleepInterval = float(gConfig.getValue('Properties', 'FrameDirectoryWatchInterval'))
         time.sleep(sleepInterval)
@@ -372,7 +373,7 @@ def watchVideoFile(_currentByteCount):
         if (_lastByteCount == _currentByteCount):
             break
 
-        print('Last byte count: ' + str(_lastByteCount))
+        #print('Last byte count: ' + str(_lastByteCount))
         print('Current byte count: ' + str(_currentByteCount))
         sleepInterval = float(gConfig.getValue('Properties', 'FrameDirectoryWatchInterval'))
         time.sleep(sleepInterval)
